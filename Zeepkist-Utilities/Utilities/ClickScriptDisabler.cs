@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -9,19 +10,40 @@ public sealed class ClickScriptDisabler : MonoBehaviour
     private static LEV_ClickScript clickScript;
     private static int disableRequests;
 
-    [PublicAPI] public static bool IsEnabled => disableRequests == 0;
+    private static readonly List<object> senders = new List<object>();
+    
+    [PublicAPI] public static bool IsEnabled => disableRequests == 0 || senders.Count > 0;
 
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public static void Enable()
     {
         disableRequests = Math.Max(0, disableRequests - 1);
         UpdateClickScript();
     }
 
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public static void Disable()
     {
         disableRequests++;
+        UpdateClickScript();
+    }
+
+    public static void Enable(object sender)
+    {
+        if (senders.Contains(sender))
+        {
+            senders.Remove(sender);
+        }
+        
+        UpdateClickScript();
+    }
+
+    public static void Disable(object sender)
+    {
+        if (senders.Contains(sender))
+            return;
+
+        senders.Add(sender);
         UpdateClickScript();
     }
 
